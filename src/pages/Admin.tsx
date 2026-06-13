@@ -7,7 +7,7 @@ import {
   signIn,
   signOut,
 } from "../lib/api";
-import { isSupabaseConfigured } from "../lib/supabase";
+import { isFirebaseConfigured } from "../lib/firebase";
 import type { BookApp } from "../types";
 import AppForm from "../components/AppForm";
 
@@ -52,9 +52,9 @@ function Login({ onLogin }: { onLogin: () => void }) {
     <div className="auth-wrap">
       <div className="panel auth-panel">
         <h2>Masuk Admin</h2>
-        {!isSupabaseConfigured && (
+        {!isFirebaseConfigured && (
           <div className="notice">
-            Mode demo (Supabase belum diatur). Masukkan email & password apa saja
+            Mode demo (Firebase belum diatur). Masukkan email & password apa saja
             untuk mencoba.
           </div>
         )}
@@ -169,9 +169,9 @@ function Dashboard({ onLogout }: { onLogout: () => void }) {
         </div>
       </div>
 
-      {!isSupabaseConfigured && (
+      {!isFirebaseConfigured && (
         <div className="notice">
-          Mode demo — perubahan tersimpan di browser ini saja. Atur Supabase di
+          Mode demo — perubahan tersimpan di browser ini saja. Atur Firebase di
           file <code>.env</code> untuk menyimpan permanen & live ke publik.
         </div>
       )}

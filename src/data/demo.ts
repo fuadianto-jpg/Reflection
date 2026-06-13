@@ -2,7 +2,7 @@ import type { BookApp } from "../types";
 import { generateCoverSvg } from "../lib/cover";
 
 /**
- * Demo data used when Supabase is not configured, so the gallery is
+ * Demo data used when Firebase is not configured, so the gallery is
  * never empty during development. Covers are auto-generated.
  */
 const seed = [
