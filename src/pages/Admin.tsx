@@ -1,4 +1,27 @@
-import { useEffect, useState, type FormEvent } from "react";
+import {
+  useEffect,
+  useState,
+  type CSSProperties,
+  type FormEvent,
+} from "react";
+import {
+  DndContext,
+  closestCenter,
+  PointerSensor,
+  TouchSensor,
+  KeyboardSensor,
+  useSensor,
+  useSensors,
+  type DragEndEvent,
+} from "@dnd-kit/core";
+import {
+  SortableContext,
+  verticalListSortingStrategy,
+  sortableKeyboardCoordinates,
+  useSortable,
+  arrayMove,
+} from "@dnd-kit/sortable";
+import { CSS } from "@dnd-kit/utilities";
 import {
   listApps,
   deleteApp,
@@ -123,6 +146,41 @@ function Dashboard({ onLogout }: { onLogout: () => void }) {
     onLogout();
   }
 
+  const sensors = useSensors(
+    useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
+    useSensor(TouchSensor, {
+      activationConstraint: { delay: 150, tolerance: 8 },
+    }),
+    useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates })
+  );
+
+  async function onDragEnd(e: DragEndEvent) {
+    const { active, over } = e;
+    if (!over || active.id === over.id) return;
+    const oldIndex = apps.findIndex((a) => a.id === active.id);
+    const newIndex = apps.findIndex((a) => a.id === over.id);
+    if (oldIndex < 0 || newIndex < 0) return;
+
+    const reordered = arrayMove(apps, oldIndex, newIndex).map((a, i) => ({
+      ...a,
+      sort_order: i + 1,
+    }));
+    setApps(reordered); // optimistic update
+
+    // persist only the rows whose order actually changed
+    const changed = reordered.filter(
+      (a, i) => apps.find((p) => p.id === a.id)?.sort_order !== i + 1
+    );
+    try {
+      await Promise.all(
+        changed.map((a) => updateApp(a.id, { sort_order: a.sort_order }))
+      );
+    } catch (err) {
+      console.error("Gagal menyimpan urutan:", err);
+      refresh(); // revert to server state on failure
+    }
+  }
+
   const nextOrder =
     apps.reduce((m, a) => Math.max(m, a.sort_order), 0) + 1;
 
@@ -184,66 +242,126 @@ function Dashboard({ onLogout }: { onLogout: () => void }) {
           <p>Belum ada app. Klik “Tambah App” untuk membuat yang pertama.</p>
         </div>
       ) : (
-        <div className="table-wrap">
-          <table>
-            <thead>
-              <tr>
-                <th className="hide-sm">Cover</th>
-                <th>App</th>
-                <th className="hide-sm">Buku</th>
-                <th>Status</th>
-                <th style={{ textAlign: "right" }}>Aksi</th>
-              </tr>
-            </thead>
-            <tbody>
-              {apps.map((app) => (
-                <tr key={app.id}>
-                  <td className="hide-sm">
-                    {app.cover_url ? (
-                      <img className="row-thumb" src={app.cover_url} alt="" />
-                    ) : (
-                      <div className="row-thumb" />
-                    )}
-                  </td>
-                  <td>
-                    <strong>{app.title}</strong>
-                  </td>
-                  <td className="hide-sm">{app.book_title}</td>
-                  <td>
-                    <button
-                      className={`status-pill ${
-                        app.status === "published"
-                          ? "status-published"
-                          : "status-draft"
-                      }`}
-                      onClick={() => toggleStatus(app)}
-                      title="Klik untuk ganti status"
-                    >
-                      {app.status === "published" ? "Tampil" : "Draft"}
-                    </button>
-                  </td>
-                  <td>
-                    <div className="row-actions">
-                      <button
-                        className="link-btn"
-                        onClick={() => {
+        <>
+          <p className="reorder-hint">
+            Geser <span className="grip">⠿</span> untuk mengatur urutan tampil di
+            halaman utama (paling atas = muncul pertama).
+          </p>
+          <div className="table-wrap">
+            <DndContext
+              sensors={sensors}
+              collisionDetection={closestCenter}
+              onDragEnd={onDragEnd}
+            >
+              <table>
+                <thead>
+                  <tr>
+                    <th aria-label="Urutan" />
+                    <th className="hide-sm">Cover</th>
+                    <th>App</th>
+                    <th className="hide-sm">Buku</th>
+                    <th>Status</th>
+                    <th style={{ textAlign: "right" }}>Aksi</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <SortableContext
+                    items={apps.map((a) => a.id)}
+                    strategy={verticalListSortingStrategy}
+                  >
+                    {apps.map((app) => (
+                      <SortableRow
+                        key={app.id}
+                        app={app}
+                        onToggle={() => toggleStatus(app)}
+                        onEdit={() => {
                           setEditing(app);
                           setShowForm(true);
                         }}
-                      >
-                        Edit
-                      </button>
-                      <button className="btn-danger" onClick={() => onDelete(app)}>
-                        Hapus
-                      </button>
-                    </div>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+                        onDelete={() => onDelete(app)}
+                      />
+                    ))}
+                  </SortableContext>
+                </tbody>
+              </table>
+            </DndContext>
+          </div>
+        </>
       )}
     </main>
+  );
+}
+
+/* ----------------------------- Sortable row ----------------------------- */
+
+function SortableRow({
+  app,
+  onToggle,
+  onEdit,
+  onDelete,
+}: {
+  app: BookApp;
+  onToggle: () => void;
+  onEdit: () => void;
+  onDelete: () => void;
+}) {
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } =
+    useSortable({ id: app.id });
+
+  const style: CSSProperties = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    opacity: isDragging ? 0.65 : 1,
+    position: "relative",
+    zIndex: isDragging ? 10 : undefined,
+    background: isDragging ? "var(--pasir)" : undefined,
+  };
+
+  return (
+    <tr ref={setNodeRef} style={style}>
+      <td className="drag-cell">
+        <button
+          type="button"
+          className="drag-handle"
+          aria-label="Geser untuk atur urutan"
+          {...attributes}
+          {...listeners}
+        >
+          ⠿
+        </button>
+      </td>
+      <td className="hide-sm">
+        {app.cover_url ? (
+          <img className="row-thumb" src={app.cover_url} alt="" />
+        ) : (
+          <div className="row-thumb" />
+        )}
+      </td>
+      <td>
+        <strong>{app.title}</strong>
+      </td>
+      <td className="hide-sm">{app.book_title}</td>
+      <td>
+        <button
+          className={`status-pill ${
+            app.status === "published" ? "status-published" : "status-draft"
+          }`}
+          onClick={onToggle}
+          title="Klik untuk ganti status"
+        >
+          {app.status === "published" ? "Tampil" : "Draft"}
+        </button>
+      </td>
+      <td>
+        <div className="row-actions">
+          <button className="link-btn" onClick={onEdit}>
+            Edit
+          </button>
+          <button className="btn-danger" onClick={onDelete}>
+            Hapus
+          </button>
+        </div>
+      </td>
+    </tr>
   );
 }
