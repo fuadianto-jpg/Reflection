@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { listApps } from "../lib/api";
 import type { BookApp } from "../types";
 import AppCard from "../components/AppCard";
+import PhoneMockup from "../components/PhoneMockup";
 import PreviewModal from "../components/PreviewModal";
 
 export default function Gallery() {
@@ -36,57 +37,107 @@ export default function Gallery() {
     });
   }, [apps, q, cat]);
 
+  const heroCovers = apps.slice(0, 4);
+
   return (
-    <main className="container">
-      <section className="catalog-head">
-        <h1>Semua App</h1>
-        <p>Pilih app, preview langsung di layar, lalu pakai untuk kebiasaan harianmu.</p>
+    <main>
+      {/* ===== Hero / promosi ===== */}
+      <section className="hero container">
+        <div className="hero-text">
+          <h1>Ubah ide besar dari buku menjadi kebiasaan harian</h1>
+          <p>
+            Koleksi app yang masing-masing lahir dari sebuah buku. Pilih,
+            preview langsung di layar, lalu pakai untuk hidup yang lebih baik.
+          </p>
+          <div className="hero-cta">
+            <a href="#apps" className="btn btn-primary">
+              Jelajahi app
+            </a>
+            {apps.length > 0 && (
+              <button
+                className="btn btn-ghost"
+                onClick={() => setPreview(apps[0])}
+              >
+                Coba preview
+              </button>
+            )}
+          </div>
+        </div>
+
+        <div className="hero-visual">
+          <PhoneMockup>
+            <div className="mini-app">
+              <div className="mini-top">
+                <span>📖</span> Reflection
+              </div>
+              {heroCovers.length > 0 ? (
+                <div className="mini-grid">
+                  {heroCovers.map((a) => (
+                    <img
+                      key={a.id}
+                      className="mini-cover"
+                      src={a.cover_url}
+                      alt={a.title}
+                    />
+                  ))}
+                </div>
+              ) : (
+                <div className="mini-empty">📚</div>
+              )}
+            </div>
+          </PhoneMockup>
+        </div>
       </section>
 
-      {!loading && apps.length > 0 && (
-        <div className="search-row">
-          <input
-            type="search"
-            placeholder="Cari judul app, buku, atau penulis…"
-            value={q}
-            onChange={(e) => setQ(e.target.value)}
-          />
-          {categories.length > 1 && (
-            <div className="search-chips">
-              {categories.map((c) => (
-                <button
-                  key={c}
-                  className={`chip ${cat === c ? "active" : ""}`}
-                  onClick={() => setCat(c)}
-                >
-                  {c}
-                </button>
-              ))}
-            </div>
-          )}
-        </div>
-      )}
+      {/* ===== Katalog ===== */}
+      <section id="apps" className="container">
+        {!loading && apps.length > 0 && (
+          <div className="search-row">
+            <input
+              type="search"
+              placeholder="Cari judul app, buku, atau penulis…"
+              value={q}
+              onChange={(e) => setQ(e.target.value)}
+            />
+            {categories.length > 1 && (
+              <div className="search-chips">
+                {categories.map((c) => (
+                  <button
+                    key={c}
+                    className={`chip ${cat === c ? "active" : ""}`}
+                    onClick={() => setCat(c)}
+                  >
+                    {c}
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
 
-      {loading ? (
-        <div className="empty">Memuat…</div>
-      ) : filtered.length === 0 ? (
-        <div className="empty">
-          <div className="empty-mark">📚</div>
-          {apps.length === 0 ? (
-            <p>Belum ada app di sini. Tambahkan app pertama lewat panel admin.</p>
-          ) : (
-            <p>Tidak ada app yang cocok dengan pencarianmu.</p>
-          )}
-        </div>
-      ) : (
-        <div className="grid">
-          {filtered.map((app) => (
-            <AppCard key={app.id} app={app} onPreview={setPreview} />
-          ))}
-        </div>
-      )}
+        {loading ? (
+          <div className="empty">Memuat…</div>
+        ) : filtered.length === 0 ? (
+          <div className="empty">
+            <div className="empty-mark">📚</div>
+            {apps.length === 0 ? (
+              <p>Belum ada app di sini. Tambahkan app pertama lewat panel admin.</p>
+            ) : (
+              <p>Tidak ada app yang cocok dengan pencarianmu.</p>
+            )}
+          </div>
+        ) : (
+          <div className="grid">
+            {filtered.map((app) => (
+              <AppCard key={app.id} app={app} onPreview={setPreview} />
+            ))}
+          </div>
+        )}
+      </section>
 
-      {preview && <PreviewModal app={preview} onClose={() => setPreview(null)} />}
+      {preview && (
+        <PreviewModal app={preview} onClose={() => setPreview(null)} />
+      )}
     </main>
   );
 }
