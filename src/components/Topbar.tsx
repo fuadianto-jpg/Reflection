@@ -1,6 +1,10 @@
-import { Link } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 
 export default function Topbar() {
+  const { pathname } = useLocation();
+  const active = (p: string) =>
+    pathname === p ? "nav-link active" : "nav-link";
+
   return (
     <header className="topbar">
       <div className="container topbar-inner">
@@ -21,8 +25,11 @@ export default function Topbar() {
           </svg>
           <span>Reflection</span>
         </Link>
-        <nav>
-          <Link to="/admin" className="nav-link">
+        <nav className="topbar-nav">
+          <Link to="/apps" className={active("/apps")}>
+            App
+          </Link>
+          <Link to="/admin" className={active("/admin")}>
             Admin
           </Link>
         </nav>

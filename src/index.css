@@ -129,6 +129,17 @@ textarea {
   color: var(--tinta);
 }
 
+.nav-link.active {
+  color: var(--tinta);
+  font-weight: 600;
+}
+
+.topbar-nav {
+  display: flex;
+  gap: 1.5rem;
+  align-items: center;
+}
+
 /* ===== Buttons ===== */
 .btn {
   display: inline-flex;
@@ -408,6 +419,149 @@ textarea {
 @media (min-width: 640px) {
   .preview-meta {
     text-align: left;
+  }
+}
+
+/* ===== Landing sections ===== */
+.eyebrow {
+  display: inline-block;
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--clay);
+  margin-bottom: 0.85rem;
+}
+
+.section {
+  padding: 3rem 0;
+}
+
+.section.alt {
+  background: var(--kartu);
+  border-top: 1px solid var(--tinta-line);
+  border-bottom: 1px solid var(--tinta-line);
+}
+
+.section-title {
+  font-size: clamp(1.5rem, 4vw, 2rem);
+  font-weight: 700;
+  text-align: center;
+  margin-bottom: 2rem;
+}
+
+.features {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1.25rem;
+}
+
+.feature {
+  background: var(--pasir);
+  border: 1px solid var(--tinta-line);
+  border-radius: var(--radius);
+  padding: 1.5rem;
+  text-align: center;
+}
+
+.section.alt .feature {
+  background: var(--kartu);
+}
+
+.feature-ic {
+  font-size: 2rem;
+  margin-bottom: 0.6rem;
+}
+
+.feature h3 {
+  font-size: 1.1rem;
+  font-weight: 700;
+  margin-bottom: 0.4rem;
+}
+
+.feature p {
+  font-size: 0.9rem;
+  color: var(--tinta-soft);
+}
+
+.steps {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1.25rem;
+  max-width: 640px;
+  margin: 0 auto;
+}
+
+.step {
+  display: flex;
+  gap: 1rem;
+  align-items: flex-start;
+}
+
+.step-no {
+  flex: 0 0 auto;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: var(--tinta);
+  color: var(--pasir);
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.step h3 {
+  font-size: 1.05rem;
+  font-weight: 700;
+  margin-bottom: 0.2rem;
+}
+
+.step p {
+  font-size: 0.9rem;
+  color: var(--tinta-soft);
+}
+
+.cta-band {
+  background: var(--tinta);
+  color: var(--pasir);
+  padding: 3rem 0;
+  text-align: center;
+}
+
+.cta-band h2 {
+  font-size: clamp(1.4rem, 4vw, 1.9rem);
+  font-weight: 700;
+  margin-bottom: 1.5rem;
+}
+
+.site-footer {
+  padding: 2rem 0;
+  text-align: center;
+  font-size: 0.85rem;
+  color: var(--tinta-soft);
+}
+
+.catalog-head {
+  padding: 2.5rem 0 1.5rem;
+}
+
+.catalog-head h1 {
+  font-size: clamp(1.8rem, 5vw, 2.5rem);
+  font-weight: 700;
+  margin-bottom: 0.5rem;
+}
+
+.catalog-head p {
+  color: var(--tinta-soft);
+}
+
+@media (min-width: 720px) {
+  .features {
+    grid-template-columns: repeat(3, 1fr);
+  }
+  .section {
+    padding: 4.5rem 0;
   }
 }
 
